@@ -2,7 +2,7 @@
 
 import pytest
 
-from lzw import to_bin, to_dec
+from lzw import to_bin, to_dec, build_dico
 
 ########################
 # Test: to_bin         #
@@ -50,3 +50,22 @@ def test_to_dec_3():
     ref = 63
     b = '000111111'
     assert ref == to_dec(b)
+
+########################
+# Test: build_dico     #
+########################
+
+def test_build_dico_1():
+    s = "abbbc"
+    ref = ['%', 'a', 'b', 'c']
+    assert build_dico(s) == ref
+
+def test_build_dico_2():
+    s = "bbaabbbaabbaaabbbaaa"
+    ref = ['%', 'b', 'a']
+    assert build_dico(s) == ref
+
+def test_build_dico_3():
+    s = ""
+    ref = ['%']
+    assert build_dico(s) == ref

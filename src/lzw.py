@@ -2,9 +2,23 @@
 
 from argparse import ArgumentParser
 
-def build_dico():
-    # build the default dictionary
-    pass
+# build the default dictionary
+def build_dico(s):
+    '''
+    Build the dictionnary according to the symbols in s
+    ex: for s="abbbc" -> ['%', 'a', 'b', 'c'] ('%' default special char)
+
+    :param s: input string
+    :type s: str
+
+    :return: the list with the default elements
+    :rtype: list
+    '''
+    dic = ['%']
+    for c in s:
+        if not c in dic:
+            dic.append(c)
+    return dic
 
 # for compression part
 def to_bin(value, n):
@@ -18,7 +32,7 @@ def to_bin(value, n):
     :type n: int
 
     :return: string binary representation
-    :rtype: string
+    :rtype: str
     '''
     tmp = bin(value).split('b')[1]
     return '0' * (n - len(tmp)) + tmp
