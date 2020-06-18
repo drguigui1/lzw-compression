@@ -6,6 +6,7 @@ def build_dico():
     # build the default dictionary
     pass
 
+# for compression part
 def to_bin(value, n):
     '''
     Convert the value into binary string representation
@@ -21,6 +22,20 @@ def to_bin(value, n):
     '''
     tmp = bin(value).split('b')[1]
     return '0' * (n - len(tmp)) + tmp
+
+# for decompression
+def to_dec(value):
+    '''
+    Convert binary string into int representation
+
+    :param value: value to convert
+
+    :type value: string
+
+    :return: Converted value into int
+    :rtype: int
+    '''
+    return int(value, 2)
 
 def _build_arg_list():
     '''
