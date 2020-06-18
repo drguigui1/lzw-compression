@@ -62,7 +62,7 @@ def test_build_dico_1():
 
 def test_build_dico_2():
     s = "bbaabbbaabbaaabbbaaa"
-    ref = ['%', 'b', 'a']
+    ref = ['%', 'a', 'b']
     assert build_dico(s) == ref
 
 def test_build_dico_3():
