@@ -72,7 +72,7 @@ def get_file_content(path):
     # return the content without the eof char
     return content[:-1]
 
-# write the lzw_table into a csv
+# write a table into a csv
 def write_csv(table, path):
     '''
     Write the table into a csv file
@@ -87,11 +87,6 @@ def write_csv(table, path):
     table = table[1:]
     df = pd.DataFrame(table, columns=cols_name)
     df.to_csv(path, index=False, columns=cols_name)
-
-def compute_rate():
-    '''
-    '''
-    pass
 
 def compute_size_bits(s, dico):
     '''
@@ -121,8 +116,38 @@ def compress(s):
     '''
     # init the dictionnary
     dic = build_dico(s)
+    n_bits = compute_size_bits(s, dico)
     lzw_table = [['Buffer', 'Input', 'New sequence', 'Address', 'Output']]
-    ## TODO
+    compressed_data = ''
+    buff = s[0]
+    addr = ''
+    new_seq = ''
+    output = ''
+
+    for i in range(1, len(s)):
+        if i != len(s) - 1:
+            inpt = s[i]
+            new_seq = buff + inpt
+            idx = dic.index(buff)
+
+            # not in dictionnary
+            if not new_seq in dic:
+                dic.append(d)
+                addr = str(len(dic))
+                output = '@[' + buff + ']=' + str(idx)
+                compressed_data += to_bin(idx, n_bits)
+                buff = inpt
+            # in the dictionnary
+            else:
+                # condition to augment number of bits for encoding
+                if dic.index(new_seq) > 2**n_bits:
+                    n_bits = math.log(math.pow(2, math.ceil(math.log(idx)/math.log(2))), 2)
+                buff = new_seq
+
+        # append in the lzw table
+        lzw_table.append([buff, inpt, new_seq, addr, output])
+
+    return compressed_data, lzw_table, dic
 
 def save_compressed_data(cmp_content, path, size_content):
     '''
