@@ -116,36 +116,47 @@ def compress(s):
     '''
     # init the dictionnary
     dic = build_dico(s)
-    n_bits = compute_size_bits(s, dico)
+    n_bits = math.ceil(math.log(len(dic), 2))
     lzw_table = [['Buffer', 'Input', 'New sequence', 'Address', 'Output']]
     compressed_data = ''
+    lzw_table.append(['', s[0], '', '', ''])
     buff = s[0]
     addr = ''
     new_seq = ''
     output = ''
 
-    for i in range(1, len(s)):
-        if i != len(s) - 1:
-            inpt = s[i]
-            new_seq = buff + inpt
-            idx = dic.index(buff)
+    for i in range(1, len(s) + 1):
+        idx = dic.index(buff)
 
-            # not in dictionnary
-            if not new_seq in dic:
-                dic.append(d)
-                addr = str(len(dic))
-                output = '@[' + buff + ']=' + str(idx)
-                compressed_data += to_bin(idx, n_bits)
-                buff = inpt
-            # in the dictionnary
-            else:
-                # condition to augment number of bits for encoding
-                if dic.index(new_seq) > 2**n_bits:
-                    n_bits = math.log(math.pow(2, math.ceil(math.log(idx)/math.log(2))), 2)
-                buff = new_seq
+        if i == len(s):
+            output = '@[' + buff + ']=' + str(idx)
+            lzw_table.append([buff, '', '', '', output])
+            compressed_data += to_bin(idx, n_bits)
+            break
 
-        # append in the lzw table
-        lzw_table.append([buff, inpt, new_seq, addr, output])
+        inpt = s[i]
+
+        new_seq = buff + inpt
+
+        # not in dictionnary
+        if not new_seq in dic:
+            dic.append(new_seq)
+            addr = str(len(dic) - 1)
+            output = '@[' + buff + ']=' + str(idx)
+            compressed_data += to_bin(idx, n_bits)
+            lzw_table.append([buff, inpt, new_seq, addr, output])
+            buff = inpt
+        # in the dictionnary
+        else:
+            # condition to augment number of bits for encoding
+            output = ''
+            if dic.index(new_seq) > 2**n_bits:
+                idx_spe = dic.index('%')
+                compressed_data += to_bin(idx_spe, n_bits)
+                n_bits = int(math.log(math.pow(2, math.ceil(math.log(dic.index(new_seq))/math.log(2))), 2))
+                output = '@[%]=' + str(idx_spe)
+            lzw_table.append([buff, inpt, '', '', output])
+            buff = new_seq
 
     return compressed_data, lzw_table, dic
 
@@ -210,7 +221,7 @@ def _build_arg_list():
 if __name__ == "__main__":
     arg_list = _build_arg_list()
     path = arg_list.path
-    file_name = path.split('/')[-1].split('.')[0]
+    filename = path.split('/')[-1].split('.')[0]
     if arg_list.compress:
         # get file content
         content = get_file_content(path)
@@ -218,17 +229,19 @@ if __name__ == "__main__":
         # call compression
         cmp_content, lzw_table, dico = compress(content)
 
+        print(cmp_content)
+        print(lzw_table)
         # save lzw table into csv
-        write_csv(lzw_table, './' + filename + '_LZWtable.csv')
+#write_csv(lzw_table, './' + filename + '_LZWtable.csv')
 
         # save dico into csv
-        write_csv(dico, './' + filename + '_dico.csv')
+#write_csv(dico, './' + filename + '_dico.csv')
 
         # compute the bits size of content
         size_content = compute_size_bits(content, dico)
 
         # save compressed data
-        save_compressed_data(cmp_content, './' + filename + 'lzw', size_content)
+#save_compressed_data(cmp_content, './' + filename + 'lzw', size_content)
 
     if arg_list.uncompress:
         # call decompression
