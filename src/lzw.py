@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from argparse import ArgumentParser
+import math
 import pandas as pd
 
 ########################
@@ -92,6 +93,17 @@ def compute_rate():
     '''
     pass
 
+def compute_size_bits(s, dico):
+    '''
+    Compute the number of bits necessary to encode s having the dictionnary dico
+
+    :param s: string not compressed
+    :param dico: default dictionnary of s
+
+    :return: return the number if bits necessary to encode s without compression
+    '''
+    n_bits = math.ceil(math.log(len(dico), 2))
+    return len(s) * n_bits
 
 ########################
 #      Compression     #
@@ -187,10 +199,15 @@ if __name__ == "__main__":
         # save dico into csv
         write_csv(dico, './' + filename + '_dico.csv')
 
+        # compute the bits size of content
+        size_content = compute_size_bits(content, dico)
+
         # save compressed data
-        pass
+        save_compressed_data(cmp_content, './' + filename + 'lzw', size_content)
+
     if arg_list.uncompress:
         # call decompression
         # save decompressed data
+        # TODO
         pass
 

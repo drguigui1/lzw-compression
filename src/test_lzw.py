@@ -2,7 +2,7 @@
 
 import pytest
 
-from lzw import to_bin, to_dec, build_dico
+from lzw import to_bin, to_dec, build_dico, compute_size_bits
 
 ########################
 # Test: to_bin         #
@@ -69,3 +69,25 @@ def test_build_dico_3():
     s = ""
     ref = ['%']
     assert build_dico(s) == ref
+
+###########################
+# Test: compute_size_bits #
+###########################
+
+def test_compute_size_bits_1():
+    s = "rererere"
+    dico = ['%', 'e', 'r']
+    ref = 16
+    assert compute_size_bits(s, dico) == ref
+
+def test_compute_size_bits_2():
+    s = "abcdefgh"
+    dico = ['%', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    ref = 32
+    assert compute_size_bits(s, dico) == ref
+
+def test_compute_size_bits_3():
+    s = "yyy"
+    dico = ['%', 'y']
+    ref = 3
+    assert compute_size_bits(s, dico) == ref
