@@ -3,6 +3,10 @@
 from argparse import ArgumentParser
 import pandas as pd
 
+########################
+#         Utils        #
+########################
+
 # build the default dictionary
 def build_dico(s):
     '''
@@ -39,30 +43,33 @@ def to_bin(value, n):
     tmp = bin(value).split('b')[1]
     return '0' * (n - len(tmp)) + tmp
 
-def compress(s):
+def to_dec(value):
     '''
-    Compress the input string using the lzw algorithm
+    Convert binary string into int representation
 
-    :param s: String to be compressed
-    :type s: str
+    :param value: value to convert
 
-    :return: The compressed string, the lzw table, and the dictionnary
-    :rtype: tuple
-    '''
-    # init the dictionnary
-    dic = build_dico(s)
-    lzw_table = [['Buffer', 'Input', 'New sequence', 'Address', 'Output']]
-    ## TODO
+    :type value: string
 
-def decompress(s, dico):
+    :return: Converted value into int
+    :rtype: int
     '''
-    '''
-    pass
+    return int(value, 2)
 
-def compute_rate():
+def get_file_content(path):
     '''
+    Get the filename according to the string path
+
+    :param path: string path
+    :type path: str
+
+    :return: string of the content of the file
+    :rtype: str
     '''
-    pass
+    with open(path, 'r+') as f:
+        content = f.read()
+    # return the content without the eof char
+    return content[:-1]
 
 # write the lzw_table into a csv
 def write_csv(table, path):
@@ -80,19 +87,78 @@ def write_csv(table, path):
     df = pd.DataFrame(table, columns=cols_name)
     df.to_csv(path, index=False, columns=cols_name)
 
-# for decompression
-def to_dec(value):
+def compute_rate():
     '''
-    Convert binary string into int representation
-
-    :param value: value to convert
-
-    :type value: string
-
-    :return: Converted value into int
-    :rtype: int
     '''
-    return int(value, 2)
+    pass
+
+
+########################
+#      Compression     #
+########################
+
+def compress(s):
+    '''
+    Compress the input string using the lzw algorithm
+
+    :param s: String to be compressed
+    :type s: str
+
+    :return: The compressed string, the lzw table, and the dictionnary
+    :rtype: tuple
+    '''
+    # init the dictionnary
+    dic = build_dico(s)
+    lzw_table = [['Buffer', 'Input', 'New sequence', 'Address', 'Output']]
+    ## TODO
+
+def save_compressed_data(cmp_content, path, size_content):
+    '''
+    Save the compressed data into a .lzw file
+    Write also size before and after compression and the compression rate
+
+    :param cmp_content: string compressed -> ex: '00011101'
+    :param path: path to save data
+    :param size_content: size of the data not compressed (number of bits)
+
+    :type cmp_content: str
+    :type path: str
+    :type size_content: int
+    '''
+    # size of the compressed data
+    size_cmp_content = len(cmp_content)
+
+    # compute the rate
+    rate = size_cmp_content / size_content
+
+    # str to save in the lzw file
+    str_to_save = ""
+    str_to_save += cmp_content + '\n'
+    str_to_save += "Size before LZW compression: " + str(size_content) + ' bits \n'
+    str_to_save += "Size after LZW compression: " + str(size_cmp_content) + ' bits \n'
+    str_to_save += "Compression ratio: " + str(rate)
+
+    # save the data into the file
+    with open(path, 'a+') as f:
+        f.write(str_to_save)
+
+########################
+#     Decompression    #
+########################
+
+def decompress(s, dico):
+    '''
+    '''
+    pass
+
+def save_decompressed_data():
+    '''
+    '''
+    pass
+
+########################
+#         Main         #
+########################
 
 def _build_arg_list():
     '''
@@ -107,10 +173,20 @@ def _build_arg_list():
 if __name__ == "__main__":
     arg_list = _build_arg_list()
     path = arg_list.path
+    file_name = path.split('/')[-1].split('.')[0]
     if arg_list.compress:
+        # get file content
+        content = get_file_content(path)
+
         # call compression
+        cmp_content, lzw_table, dico = compress(content)
+
         # save lzw table into csv
+        write_csv(lzw_table, './' + filename + '_LZWtable.csv')
+
         # save dico into csv
+        write_csv(dico, './' + filename + '_dico.csv')
+
         # save compressed data
         pass
     if arg_list.uncompress:
