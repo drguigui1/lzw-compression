@@ -86,7 +86,8 @@ def write_csv(table, path):
     cols_name = table[0]
     table = table[1:]
     df = pd.DataFrame(table, columns=cols_name)
-    df.to_csv(path, index=False, columns=cols_name)
+    print(df)
+    df.to_csv(path, index=False)
 
 def compute_size_bits(s, dico):
     '''
@@ -116,6 +117,7 @@ def compress(s):
     '''
     # init the dictionnary
     dic = build_dico(s)
+    default_dico = dic[:]
     n_bits = math.ceil(math.log(len(dic), 2))
     lzw_table = [['Buffer', 'Input', 'New sequence', 'Address', 'Output']]
     compressed_data = ''
@@ -158,7 +160,7 @@ def compress(s):
             lzw_table.append([buff, inpt, '', '', output])
             buff = new_seq
 
-    return compressed_data, lzw_table, dic
+    return compressed_data, lzw_table, default_dico
 
 def save_compressed_data(cmp_content, path, size_content):
     '''
@@ -227,21 +229,19 @@ if __name__ == "__main__":
         content = get_file_content(path)
 
         # call compression
-        cmp_content, lzw_table, dico = compress(content)
+        cmp_content, lzw_table, default_dico = compress(content)
 
-        print(cmp_content)
-        print(lzw_table)
         # save lzw table into csv
-#write_csv(lzw_table, './' + filename + '_LZWtable.csv')
+        write_csv(lzw_table, './' + filename + '_LZWtable.csv')
 
         # save dico into csv
-#write_csv(dico, './' + filename + '_dico.csv')
+        write_csv([default_dico], './' + filename + '_dico.csv')
 
         # compute the bits size of content
-        size_content = compute_size_bits(content, dico)
+        size_content = compute_size_bits(content, default_dico)
 
         # save compressed data
-#save_compressed_data(cmp_content, './' + filename + 'lzw', size_content)
+        save_compressed_data(cmp_content, './' + filename + '.lzw', size_content)
 
     if arg_list.uncompress:
         # call decompression
