@@ -199,6 +199,14 @@ def save_compressed_data(cmp_content, path, size_content):
 #     Decompression    #
 ########################
 
+def get_first_nbits(cmp_data, n_bits):
+    '''
+    Get the first n bits of cmp_data
+    ex: if n_bits = 3 and cmp_data = "010011" -> "010"
+    '''
+    addr = cmp_data[:n_bits]
+    return addr, cmp_data[n_bits:]
+
 def decompress(s, dico):
     '''
     '''

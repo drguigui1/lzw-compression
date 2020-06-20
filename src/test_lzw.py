@@ -2,7 +2,7 @@
 
 import pytest
 
-from lzw import to_bin, to_dec, build_dico, compute_size_bits
+from lzw import to_bin, to_dec, build_dico, compute_size_bits, get_first_nbits
 
 ########################
 # Test: to_bin         #
@@ -91,3 +91,28 @@ def test_compute_size_bits_3():
     dico = ['%', 'y']
     ref = 3
     assert compute_size_bits(s, dico) == ref
+
+###########################
+# Test: get_first_nbits   #
+###########################
+
+def test_get_first_nbits_1():
+    s = "01001100"
+    n = 3
+    res1, res2 = get_first_nbits(s, n)
+    assert res1 == "010"
+    assert res2 == "01100"
+
+def test_get_first_nbits_2():
+    s = "0000"
+    n = 4
+    res1, res2 = get_first_nbits(s, n)
+    assert res1 == "0000"
+    assert res2 == ""
+
+def test_get_first_nbits_3():
+    s = "101010101111"
+    n = 7
+    res1, res2 = get_first_nbits(s, n)
+    assert res1 == "1010101"
+    assert res2 == "01111"
