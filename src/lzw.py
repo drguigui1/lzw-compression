@@ -86,7 +86,6 @@ def write_csv(table, path):
     cols_name = table[0]
     table = table[1:]
     df = pd.DataFrame(table, columns=cols_name)
-    print(df)
     df.to_csv(path, index=False)
 
 def compute_size_bits(s, dico):
@@ -152,10 +151,14 @@ def compress(s):
         else:
             # condition to augment number of bits for encoding
             output = ''
-            if dic.index(new_seq) > 2**n_bits:
+            idx_new_seq = dic.index(new_seq)
+            if idx_new_seq >= 2**n_bits:
                 idx_spe = dic.index('%')
                 compressed_data += to_bin(idx_spe, n_bits)
-                n_bits = int(math.log(math.pow(2, math.ceil(math.log(dic.index(new_seq))/math.log(2))), 2))
+                if idx_new_seq == 2 ** n_bits:
+                    n_bits += 1
+                else:
+                    n_bits = int(math.log(math.pow(2, math.ceil(math.log(dic.index(new_seq))/math.log(2))), 2))
                 output = '@[%]=' + str(idx_spe)
             lzw_table.append([buff, inpt, '', '', output])
             buff = new_seq
