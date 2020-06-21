@@ -191,7 +191,7 @@ def save_compressed_data(cmp_content, path, size_content):
     size_cmp_content = len(cmp_content)
 
     # compute the rate
-    rate = size_cmp_content / size_content
+    rate = round(size_cmp_content / size_content, 3)
 
     # str to save in the lzw file
     str_to_save = ""
@@ -347,7 +347,7 @@ if __name__ == "__main__":
         # save compressed data
         save_compressed_data(cmp_content, './' + filename + '.lzw', size_content)
 
-    if arg_list.uncompress:
+    elif arg_list.uncompress:
         # build the dico path
         path_dico = get_dico_path(path)
 
@@ -359,5 +359,3 @@ if __name__ == "__main__":
 
         # save decompressed data
         save_decompressed_data(data, filename + '.txt')
-        pass
-
