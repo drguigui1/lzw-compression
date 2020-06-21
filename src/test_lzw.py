@@ -4,6 +4,8 @@ import pytest
 
 from lzw import to_bin, to_dec, build_dico, compute_size_bits, get_first_nbits
 
+from lzw import compress, decompress
+
 ########################
 # Test: to_bin         #
 ########################
@@ -116,3 +118,37 @@ def test_get_first_nbits_3():
     res1, res2 = get_first_nbits(s, n)
     assert res1 == "1010101"
     assert res2 == "01111"
+
+#############################
+# Test: compress/decompress #
+#############################
+
+def test_compress_decompress_1():
+    s = "ab*cde*fgh*"
+    cmp_s, _, dico = compress(s)
+    res = decompress(cmp_s, dico)
+    assert res == s
+
+def test_compress_decompress_2():
+    s = "rererere"
+    cmp_s, _, dico = compress(s)
+    res = decompress(cmp_s, dico)
+    assert res == s
+
+def test_compress_decompress_3():
+    s = "coucou"
+    cmp_s, _, dico = compress(s)
+    res = decompress(cmp_s, dico)
+    assert res == s
+
+def test_compress_decompress_4():
+    s = "pourquoi pas"
+    cmp_s, _, dico = compress(s)
+    res = decompress(cmp_s, dico)
+    assert res == s
+
+def test_compress_decompress_5():
+    s = "abcd*dccacbdda*aaddcba*"
+    cmp_s, _, dico = compress(s)
+    res = decompress(cmp_s, dico)
+    assert res == s

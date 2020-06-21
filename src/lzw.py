@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from argparse import ArgumentParser
-import math
 import pandas as pd
+import numpy as np
 
 ########################
 #         Utils        #
@@ -97,8 +97,23 @@ def compute_size_bits(s, dico):
 
     :return: return the number if bits necessary to encode s without compression
     '''
-    n_bits = math.ceil(math.log(len(dico), 2))
+    n_bits = int(np.ceil(np.log2(len(dico))))
     return len(s) * n_bits
+
+def is_enough_bits(n_bits, addr):
+    '''
+    Determine according to an address if n_bits is enough to encode addr
+
+    :param n_bits: current number of bits the encode the data
+    :param addr: addr to encode
+
+    :type n_bits: int
+    :type addr: addr
+
+    :return: wether n_bits is enough to encode addr
+    :rtype: bool
+    '''
+    return addr < 2**n_bits
 
 ########################
 #      Compression     #
@@ -117,26 +132,17 @@ def compress(s):
     # init the dictionnary
     dic = build_dico(s)
     default_dico = dic[:]
-    n_bits = math.ceil(math.log(len(dic), 2))
+    idx_spe = dic.index('%')
+    n_bits = int(np.ceil(np.log2(len(dic))))
     lzw_table = [['Buffer', 'Input', 'New sequence', 'Address', 'Output']]
-    compressed_data = ''
     lzw_table.append(['', s[0], '', '', ''])
     buff = s[0]
-    addr = ''
-    new_seq = ''
-    output = ''
+    addr, new_seq, output, compressed_data = '', '', '', ''
 
-    for i in range(1, len(s) + 1):
+    for i in range(1, len(s)):
         idx = dic.index(buff)
 
-        if i == len(s):
-            output = '@[' + buff + ']=' + str(idx)
-            lzw_table.append([buff, '', '', '', output])
-            compressed_data += to_bin(idx, n_bits)
-            break
-
         inpt = s[i]
-
         new_seq = buff + inpt
 
         # not in dictionnary
@@ -150,18 +156,21 @@ def compress(s):
         # in the dictionnary
         else:
             # condition to augment number of bits for encoding
-            output = ''
             idx_new_seq = dic.index(new_seq)
-            if idx_new_seq >= 2**n_bits:
-                idx_spe = dic.index('%')
-                compressed_data += to_bin(idx_spe, n_bits)
-                if idx_new_seq == 2 ** n_bits:
+            if (is_enough_bits(n_bits, idx_new_seq)):
+                lzw_table.append([buff, inpt, '', '', ''])
+            else:
+                while (not is_enough_bits(n_bits, idx_new_seq)):
+                    lzw_table.append([buff, inpt, '', '', '@[%]=' + str(idx_spe)])
+                    compressed_data += to_bin(idx_spe, n_bits)
                     n_bits += 1
-                else:
-                    n_bits = int(math.log(math.pow(2, math.ceil(math.log(dic.index(new_seq))/math.log(2))), 2))
-                output = '@[%]=' + str(idx_spe)
-            lzw_table.append([buff, inpt, '', '', output])
+
             buff = new_seq
+
+    # last element case
+    idx = dic.index(buff)
+    lzw_table.append([buff, '', '', '', '@[' + buff + ']=' + str(idx)])
+    compressed_data += to_bin(idx, n_bits)
 
     return compressed_data, lzw_table, default_dico
 
@@ -187,8 +196,8 @@ def save_compressed_data(cmp_content, path, size_content):
     # str to save in the lzw file
     str_to_save = ""
     str_to_save += cmp_content + '\n'
-    str_to_save += "Size before LZW compression: " + str(size_content) + ' bits \n'
-    str_to_save += "Size after LZW compression: " + str(size_cmp_content) + ' bits \n'
+    str_to_save += "Size before LZW compression: " + str(size_content) + ' bits\n'
+    str_to_save += "Size after LZW compression: " + str(size_cmp_content) + ' bits\n'
     str_to_save += "Compression ratio: " + str(rate)
 
     # save the data into the file
@@ -199,23 +208,103 @@ def save_compressed_data(cmp_content, path, size_content):
 #     Decompression    #
 ########################
 
+def get_dico_path(file_path):
+    '''
+    Build the path of dico file (the dico file is in the same dir as file path)
+
+    :param file_path: path of the file
+    :type file_path: str
+    '''
+    pos = file_path.rfind('/')
+    filename = file_path.split('/')[-1].split('.')[0]
+    return file_path[:pos+1] + filename + '_dico.csv'
+
+def get_default_dico(path):
+    '''
+    Get the default dico from the csv file
+
+    :param path: path of the csv file
+    :type path: str
+    '''
+    dico = pd.read_csv(path)
+    return dico
+
 def get_first_nbits(cmp_data, n_bits):
     '''
     Get the first n bits of cmp_data
     ex: if n_bits = 3 and cmp_data = "010011" -> "010"
+
+    :param cmp_data: compressed data in binary string format -> "001011101"
+    :param n_bits: n bits to get from cmp_data
+
+    :type cmp_data: str
+    :type n_bits: int
+
+    :return: tuple with the firsts n bits of the compressed data and the rest
+    :rtype: tuple
     '''
     addr = cmp_data[:n_bits]
     return addr, cmp_data[n_bits:]
 
-def decompress(s, dico):
+def decompress(cmp_data, dico):
     '''
+    Decompress the compressed input data
     '''
-    pass
+    # know on which number bits to read cmp_data
+    n_bits = int(np.ceil(np.log2(len(dico))))
+    addr, cmp_data = get_first_nbits(cmp_data, n_bits)
 
-def save_decompressed_data():
+    # convert addr to dec
+    addr_dec = to_dec(addr)
+
+    # set the default buffer
+    buff = dico[addr_dec]
+
+    # last char added into the dictionnary
+    last_chr_dico = ''
+    output = ''
+
+    while (cmp_data != ""):
+        addr, cmp_data = get_first_nbits(cmp_data, n_bits)
+        addr_dec = to_dec(addr)
+
+        # already in the dico
+        if addr_dec < len(dico):
+            inpt_seq = dico[addr_dec]
+        # not in the dico (particular case)
+        else:
+            inpt_seq = buff + last_chr_dico
+
+        # case we receive '%'
+        if inpt_seq == '%':
+            n_bits += 1
+            continue
+
+        new_seq = buff + inpt_seq[0]
+        dico.append(new_seq)
+
+        output += buff
+        last_chr_dico = new_seq[-1]
+        buff = dico[addr_dec]
+
+    # add last element
+    output += buff
+
+    return output
+
+def save_decompressed_data(data, path):
     '''
+    Save decompressed data into a file
+
+    :param data: data to save into the file
+    :param path: path of the file
+
+    :type data: str
+    :type path: str
     '''
-    pass
+    f = open(path, 'w+')
+    f.write(data)
+    f.close()
 
 ########################
 #         Main         #
@@ -234,11 +323,15 @@ def _build_arg_list():
 if __name__ == "__main__":
     arg_list = _build_arg_list()
     path = arg_list.path
+    pos = path.rfind('/')
     filename = path.split('/')[-1].split('.')[0]
-    if arg_list.compress:
-        # get file content
-        content = get_file_content(path)
 
+    # get file content
+    # in case of compression the content is not compressed
+    # in case of decompression the content is compressed in binary (string storage)
+    content = get_file_content(path)
+
+    if arg_list.compress:
         # call compression
         cmp_content, lzw_table, default_dico = compress(content)
 
@@ -255,8 +348,16 @@ if __name__ == "__main__":
         save_compressed_data(cmp_content, './' + filename + '.lzw', size_content)
 
     if arg_list.uncompress:
+        # build the dico path
+        path_dico = get_dico_path(path)
+
+        # get the default dictionnary
+        default_dico = list(get_default_dico(path_dico))
+
         # call decompression
+        data = decompress(content, default_dico)
+
         # save decompressed data
-        # TODO
+        save_decompressed_data(data, filename + '.txt')
         pass
 
