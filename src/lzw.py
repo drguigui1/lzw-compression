@@ -201,7 +201,7 @@ def save_compressed_data(cmp_content, path, size_content):
     str_to_save += "Compression ratio: " + str(rate)
 
     # save the data into the file
-    with open(path, 'a+') as f:
+    with open(path, 'w+') as f:
         f.write(str_to_save)
 
 ########################
