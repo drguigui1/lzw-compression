@@ -25,7 +25,6 @@ def build_dico(s):
         if not c in dic:
             dic.append(c)
     dic.sort()
-    print(dic)
     return dic
 
 # for compression part
@@ -355,7 +354,6 @@ if __name__ == "__main__":
         # call compression
         cmp_content, lzw_table, default_dico = compress(content)
 
-        print(default_dico)
         # save lzw table into csv
         write_csv(lzw_table, './' + filename + '_LZWtable.csv')
 
