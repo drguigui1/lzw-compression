@@ -25,6 +25,7 @@ def build_dico(s):
         if not c in dic:
             dic.append(c)
     dic.sort()
+    print(dic)
     return dic
 
 # for compression part
@@ -87,6 +88,25 @@ def write_csv(table, path):
     table = table[1:]
     df = pd.DataFrame(table, columns=cols_name)
     df.to_csv(path, index=False)
+
+def write_dico_csv(dico, path):
+    '''
+    Write the dico into the csv path
+
+    :param dico: the default dictionary
+    :param path: the path to save the dictionnary
+
+    :type dico: list
+    :type path: str
+    '''
+    s = ""
+    for i in range(len(dico)):
+        s += dico[i]
+        if i != len(dico) - 1:
+            s += ','
+    s += '\n'
+    with open(path, "w+")as f:
+        f.write(s)
 
 def compute_size_bits(s, dico):
     '''
@@ -335,11 +355,12 @@ if __name__ == "__main__":
         # call compression
         cmp_content, lzw_table, default_dico = compress(content)
 
+        print(default_dico)
         # save lzw table into csv
         write_csv(lzw_table, './' + filename + '_LZWtable.csv')
 
         # save dico into csv
-        write_csv([default_dico], './' + filename + '_dico.csv')
+        write_dico_csv(default_dico, './' + filename + '_dico.csv')
 
         # compute the bits size of content
         size_content = compute_size_bits(content, default_dico)
